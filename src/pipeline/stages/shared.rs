@@ -24,11 +24,10 @@ pub(crate) fn should_run_phase_for_current_event(
     event: Option<&Event>,
 ) -> bool {
     match phase {
-        ExecutionPhase::PreStrategy => policy.bar_offset == 1,
+        ExecutionPhase::PreStrategy => {
+            policy.bar_offset == 1
+        }
         ExecutionPhase::PostStrategy => {
-            if !(policy.price_basis == PriceBasis::Close && policy.bar_offset == 0) {
-                return false;
-            }
             match event {
                 Some(Event::Bar(_) | Event::Tick(_)) => true,
                 Some(Event::Timer(timer)) => {

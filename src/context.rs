@@ -211,11 +211,6 @@ fn parse_order_fill_policy_override(
         ));
     }
     match basis {
-        PriceBasis::Open if bar_offset != 1 => {
-            return Err(PyValueError::new_err(
-                "fill_policy(open) requires bar_offset=1",
-            ));
-        }
         PriceBasis::Ohlc4 if bar_offset != 1 => {
             return Err(PyValueError::new_err(
                 "fill_policy(ohlc4) requires bar_offset=1",

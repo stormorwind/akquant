@@ -259,6 +259,7 @@ impl TimeInForce {
 /// 撮合执行模式
 pub enum ExecutionMode {
     CurrentClose,   // 当前Bar收盘价成交 (Cheat-on-Close)
+    CurrentOpen,    // 当前Bar开盘价成交 (Pre-market order)
     NextOpen,       // 下一根Bar开盘价成交 (Real-world)
     NextClose,      // 下一根Bar收盘价成交
     NextAverage,    // 下一根Bar均价成交 (TWAP/VWAP 模拟)
@@ -319,6 +320,11 @@ impl ExecutionPolicyCore {
                 bar_offset: 0,
                 temporal,
             },
+            ExecutionMode::CurrentOpen => Self {
+                price_basis: PriceBasis::Open,
+                bar_offset: 0,
+                temporal,
+            },
             ExecutionMode::NextOpen => Self {
                 price_basis: PriceBasis::Open,
                 bar_offset: 1,
@@ -344,12 +350,13 @@ impl ExecutionPolicyCore {
 
     pub fn to_legacy_mode(self) -> ExecutionMode {
         match (self.price_basis, self.bar_offset) {
+            (PriceBasis::Open, 0) => ExecutionMode::CurrentOpen,
             (PriceBasis::Open, 1) => ExecutionMode::NextOpen,
             (PriceBasis::Close, 0) => ExecutionMode::CurrentClose,
             (PriceBasis::Close, 1) => ExecutionMode::NextClose,
             (PriceBasis::Ohlc4, 1) => ExecutionMode::NextAverage,
             (PriceBasis::Hl2, 1) => ExecutionMode::NextHighLowMid,
-            (PriceBasis::Open, _) => ExecutionMode::NextOpen,
+            (PriceBasis::Open, _) => ExecutionMode::CurrentOpen,
             (PriceBasis::Close, _) => ExecutionMode::CurrentClose,
             (PriceBasis::Ohlc4, _) => ExecutionMode::NextAverage,
             (PriceBasis::Hl2, _) => ExecutionMode::NextHighLowMid,

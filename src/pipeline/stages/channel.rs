@@ -1,5 +1,6 @@
 use super::shared::{
-    ExecutionPhase, apply_execution_report, flush_accumulated_trades, has_orders_matching_phase,
+    ExecutionPhase, apply_execution_report, effective_execution_policy_for_order,
+    flush_accumulated_trades, has_orders_matching_phase,
 };
 use crate::context::EngineContext;
 use crate::engine::Engine;
@@ -245,6 +246,41 @@ impl Processor for ChannelProcessor {
                     for order in pending_order_requests.drain(..) {
                         process_order_request(engine, py, order);
                     }
+                }
+
+                while let Some(event) = engine.event_manager.try_recv() {
+                    drained_event = true;
+                    match event {
+                        Event::OrderRequest(order) => pending_order_requests.push(order),
+                        Event::OrderValidated(order) => {
+                            engine.execution_model.on_order(order.clone());
+                            engine.state.order_manager.add_active_order(order);
+                        }
+                        Event::ExecutionReport(order, trade) => {
+                            apply_execution_report(
+                                engine,
+                                py,
+                                order,
+                                trade,
+                                &mut oco_suppressed_fill_order_ids,
+                                &mut trades_to_process,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+
+                let has_current_bar_orders = engine
+                    .state
+                    .order_manager
+                    .active_orders
+                    .iter()
+                    .any(|order| {
+                        matches!(order.status, OrderStatus::New | OrderStatus::Submitted)
+                            && effective_execution_policy_for_order(engine, order).bar_offset == 0
+                    });
+                if has_current_bar_orders {
+                    emit_execution_reports_for_current_event(engine);
                 }
                 continue;
             }

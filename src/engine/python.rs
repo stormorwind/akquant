@@ -818,9 +818,9 @@ impl Engine {
             }
         };
         match basis {
-            PriceBasis::Open | PriceBasis::Ohlc4 | PriceBasis::Hl2 if bar_offset != 1 => {
+            PriceBasis::Ohlc4 | PriceBasis::Hl2 if bar_offset != 1 => {
                 return Err(PyValueError::new_err(
-                    "price_basis=open|ohlc4|hl2 requires bar_offset=1",
+                    "price_basis=ohlc4|hl2 requires bar_offset=1",
                 ));
             }
             _ => {}

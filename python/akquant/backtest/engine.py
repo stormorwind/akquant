@@ -77,6 +77,7 @@ _collect_after_bar_rebalance_entries_impl = (
 DEFAULT_TIMEZONE = "Asia/Shanghai"
 _RUNTIME_EXECUTION_MODE = getattr(cast(Any, _akquant_module), "ExecutionMode", None)
 _RUNTIME_MODE_NEXT_OPEN = getattr(_RUNTIME_EXECUTION_MODE, "NextOpen", "next_open")
+_RUNTIME_MODE_CURRENT_OPEN = getattr(_RUNTIME_EXECUTION_MODE, "CurrentOpen", "current_open")
 _RUNTIME_MODE_CURRENT_CLOSE = getattr(
     _RUNTIME_EXECUTION_MODE, "CurrentClose", "current_close"
 )
@@ -359,9 +360,11 @@ def _resolve_execution_policy(
         if raw_offset not in _SUPPORTED_FILL_BAR_OFFSET:
             raise ValueError("fill_policy.bar_offset must be 0 or 1")
         if raw_basis == "open":
-            if raw_offset != 1:
-                raise ValueError("fill_policy(open) requires bar_offset=1")
-            basis_mode = _RUNTIME_MODE_NEXT_OPEN
+            basis_mode = (
+                _RUNTIME_MODE_CURRENT_OPEN
+                if raw_offset == 0
+                else _RUNTIME_MODE_NEXT_OPEN
+            )
         elif raw_basis == "close":
             basis_mode = (
                 _RUNTIME_MODE_CURRENT_CLOSE
@@ -402,6 +405,8 @@ def _resolve_execution_policy(
             "close": (_RUNTIME_MODE_CURRENT_CLOSE, "close", 0),
             "next_open": (_RUNTIME_MODE_NEXT_OPEN, "open", 1),
             "nextopen": (_RUNTIME_MODE_NEXT_OPEN, "open", 1),
+            "current_open": (_RUNTIME_MODE_CURRENT_OPEN, "open", 0),
+            "currentopen": (_RUNTIME_MODE_CURRENT_OPEN, "open", 0),
             "current_close": (_RUNTIME_MODE_CURRENT_CLOSE, "close", 0),
             "currentclose": (_RUNTIME_MODE_CURRENT_CLOSE, "close", 0),
             "next_close": (_RUNTIME_MODE_NEXT_CLOSE, "close", 1),
@@ -429,6 +434,7 @@ def _resolve_execution_policy(
         if fill_policy is None:
             reverse_mode_map = {
                 _RUNTIME_MODE_NEXT_OPEN: ("open", 1),
+                _RUNTIME_MODE_CURRENT_OPEN: ("open", 0),
                 _RUNTIME_MODE_CURRENT_CLOSE: ("close", 0),
                 _RUNTIME_MODE_NEXT_CLOSE: ("close", 1),
                 _RUNTIME_MODE_NEXT_AVERAGE: ("ohlc4", 1),

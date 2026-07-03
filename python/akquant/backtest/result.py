@@ -956,8 +956,8 @@ class BacktestResult:
         safe_qty = grouped["ordered_quantity"].replace(0.0, pd.NA)
         safe_value = grouped["ordered_value"].replace(0.0, pd.NA)
         safe_equity = grouped["equity"].replace(0.0, pd.NA)
-        grouped["fill_rate_qty"] = (grouped["filled_quantity"] / safe_qty).fillna(0.0)
-        grouped["fill_rate_value"] = (grouped["filled_value"] / safe_value).fillna(0.0)
+        grouped["fill_rate_qty"] = (grouped["filled_quantity"] / safe_qty).infer_objects(copy=False).fillna(0.0)
+        grouped["fill_rate_value"] = (grouped["filled_value"] / safe_value).infer_objects(copy=False).fillna(0.0)
         grouped["turnover"] = (grouped["filled_value"] / safe_equity).fillna(0.0)
 
         grouped = grouped.reset_index()

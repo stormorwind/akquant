@@ -870,7 +870,7 @@ def _normalize_order_fill_policy(
         raise ValueError("fill_policy.bar_offset must be 0 or 1") from None
     if raw_offset not in {0, 1}:
         raise ValueError("fill_policy.bar_offset must be 0 or 1")
-    if raw_basis in {"open", "ohlc4", "hl2"} and raw_offset != 1:
+    if raw_basis in {"ohlc4", "hl2"} and raw_offset != 1:
         raise ValueError(f"fill_policy({raw_basis}) requires bar_offset=1")
     return raw_basis, raw_offset, raw_temporal
 
